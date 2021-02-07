@@ -1,5 +1,6 @@
 # Converts images into Minecraft particles mcfunction file.
 # To use this, you would need python 3 and PIL.
+# This tool is created by Red Cocoon. Please do not remove this line, please :'(
 import PIL
 from PIL import Image
 
