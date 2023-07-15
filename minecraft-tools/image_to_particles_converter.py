@@ -2,12 +2,7 @@
 # To use this, you would need python 3 and PIL.
 # This tool is created by Red Cocoon. Please do not remove this line, please :'(
 import PIL
-from PIL import Image
-
-command = "particle minecraft:dust {0} {1} {2} {3} ~{4} ~ ~{5} 0 0 0 0.001 1"
-
-image_path = str(input("Image path: "))
-output_path = str(input("Output path (without \".mcfunction\"): ")+".mcfunction")
+from PIL import Image, ImageSequence
 
 # Not recommended to change this.
 # Amount of maximum particles = x*y
@@ -26,12 +21,21 @@ particle_density = int(8)
 #image_path = str("images/{0}.{1}".format(file,extension))
 #output_path = str("generated/"+file+".mcfunction")
 
-image = Image.open(image_path)
-image.thumbnail(particle_resolution)
+command = "particle minecraft:dust {0} {1} {2} {3} ~{4} ~ ~{5} 0 0 0 0.001 1"
 
-img_x, img_y = image.size
+sequence_command = "schedule function {0} 1s append"
 
-rgba_img = image.convert('RGBA')
+image_path = str(input("Image path: "))
+output_path = str(input("Output path (without \".mcfunction\"): ")+".mcfunction")
+
+
+
+
+def open_image(image_path):
+    return Image.open(image_path)
+
+def scale_image(image):
+    return image.thumbnail(particle_resolution)
 
 def normalize_color(color):
     new_color = []
@@ -39,19 +43,36 @@ def normalize_color(color):
         new_color.append(color[i]/255)
     return new_color
 
-particles = []
+def get_particles(image):
+    scale_image(image)
+    img_x, img_y = image.size
+    rgba_img = image.convert('RGBA')
+    particles = []
+    for i in range(img_x):
+        for j in range(img_y):
+            color = normalize_color(rgba_img.getpixel((i, j)))
+            relative_x = float((img_x/2)-i)/particle_density
+            relative_y = float((img_y/2)-j)/particle_density
+            new_command = command.format(color[0],color[1],color[2],color[3],relative_x,relative_y)
+            particles.append(new_command)
+    return particles
 
-for i in range(img_x):
-    for j in range(img_y):
-        
-        color = normalize_color(rgba_img.getpixel((i, j)))
-        relative_x = float((img_x/2)-i)/particle_density
-        relative_y = float((img_y/2)-j)/particle_density
-        new_command = command.format(color[0],color[1],color[2],color[3],relative_x,relative_y)
-        particles.append(new_command)
+def write_file(output_path,particles,namespace_path="",i=0):
+    with open(output_path, "w") as file:
+        for line in particles:
+            file.write(line+"\n")
+        if !namespace_path = "":
+            file.write(sequence_command.format(namespace_path+"_"+str(i))+"\n")
 
-with open(output_path, "w") as file:
-    for line in particles:
-        file.write(line+"\n")
+image = open_image(image_path)
+
+if image.format == "GIF":
+    namespace_path = str(input("What is the namespace and path to the mcfunction? (in format \"namespace:path/to/\") "))
+    index = 1
+    for frame in ImageSequence.Iterator(im):
+        write_file(output_path, get_particles(image),namespace_path,i)
+        index += 1
+else:
+    write_file(output_path, get_particles(image))
 
 print("All done!(•̀ ω •́ )✧")
